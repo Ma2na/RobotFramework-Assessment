@@ -63,3 +63,10 @@ Clear Then Input Text
     [Arguments]    ${locator}    ${text}
     Press Keys    ${locator}    CTRL+a    BACKSPACE
     Input Text    ${locator}    ${text}
+
+# I used this approach because the normal way works on Linux (US locale) but corrupts the year on Windows (which defaults to DD/MM/YYYY instead of MM/DD/YYYY).
+Set React Date Input
+    [Arguments]    ${locator}    ${date_str}
+    ${element}    Get WebElement    ${locator}
+    ${js}    Set Variable    let d = arguments[1].split('/'); let iso = d[2]+'-'+d[0]+'-'+d[1]; let set = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set; set.call(arguments[0], iso); arguments[0].dispatchEvent(new Event('input', {bubbles: true}));
+    Execute Javascript    ${js}    ARGUMENTS    ${element}    ${date_str}

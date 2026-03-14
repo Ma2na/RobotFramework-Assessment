@@ -12,23 +12,31 @@ Open Create Modal
     Wait Until Element Is Visible    //h6[descendant::span[text()="Create Customer"]]
 
 Add A Customer
-    [Arguments]    ${user}
-    Navigate    Customers
-    Open Create Modal
+    [Arguments]    ${users}
+    FOR    ${i}    IN RANGE    0    5
+        ${user}    Set Variable    ${users}[${i}]
+        Navigate    Customers
+        Open Create Modal
 
-    Input Text    ${cust_txt_first_name}    ${user['first_name']}
-    Input Text    ${cust_txt_last_name}    ${user['last_name']}
-    Input Text    ${cust_txt_email}    ${user['email']}
-    Input Text    ${cust_txt_birthday}    ${user['birthday']}
-    Input Text    ${cust_txt_address}    ${user['address']['street']} ${user["address"]['suite']}
-    Input Text    ${cust_txt_city}    ${user['address']['city']}
-    Input Text    ${cust_txt_stateAbbr}    ${user['address']['stateAbbr']}
-    Input Text    ${cust_txt_zipcode}    ${user['address']['zipcode']}
-    Input Text    ${cust_txt_password}    ${user['password']}
-    Input Text    ${cust_txt_confirm_password}    ${user['password']}
-    Click Element   ${customers_btn_save}
-    # setTimeout(() => { debugger; }, 1);
-    Wait Until Element Is Visible    //div[text()="Customer created"]
+        Input Text    ${cust_txt_first_name}    ${user['first_name']}
+        Input Text    ${cust_txt_last_name}    ${user['last_name']}
+        Input Text    ${cust_txt_email}    ${user['email']}
+
+        # Input Text    ${cust_txt_birthday}    ${user['birthday']}
+        Set React Date Input    ${cust_txt_birthday}    ${user['birthday']}
+        
+        Input Text    ${cust_txt_address}    ${user['address']['street']} ${user["address"]['suite']}
+        Input Text    ${cust_txt_city}    ${user['address']['city']}
+        Input Text    ${cust_txt_stateAbbr}    ${user['address']['stateAbbr']}
+        Input Text    ${cust_txt_zipcode}    ${user['address']['zipcode']}
+        Input Text    ${cust_txt_password}    ${user['password']}
+        Input Text    ${cust_txt_confirm_password}    ${user['password']}
+        Click Element   ${customers_btn_save}
+        # setTimeout(() => { debugger; }, 1);
+        Wait Until Element Is Visible    //div[text()="Customer created"]
+        Verify If Customer Is Added In The Table    ${user}
+        Verify Customer Identity Details   ${user}
+    END
 
 Format Birthday
     [Arguments]    ${date}
@@ -70,40 +78,6 @@ Verify Customer Identity Details
         Should Be Equal As Strings    ${expected_values[${i}]}    ${value_text}
     END
     
-
-
-    # THIS IS LENGTHY
-    # ${first_name}    Get Value    ${cust_txt_first_name}
-    # Should Be Equal As Strings    ${user['first_name']}    ${first_name}
-
-    # ${last_name}    Get Value    ${cust_txt_last_name}
-    # Should Be Equal As Strings    ${user['last_name']}    ${last_name}
-    
-    # ${email}    Get Value    ${cust_txt_email}
-    # Should Be Equal As Strings    ${user['email']}    ${email}
-    
-    # ${birthday}    Get Value    ${cust_txt_birthday}
-    # ${formatted_date}    Format Birthday    ${birthday}
-    # Should Be Equal As Strings    ${user['birthday']}    ${formatted_date}
-    
-    # ${address}    Get Value    ${cust_txt_address}
-    # Should Be Equal As Strings    ${user['address']['street']} ${user["address"]['suite']}   ${address}
-
-    # ${city}    Get Value    ${cust_txt_city}
-    # Should Be Equal As Strings    ${user['address']['city']}    ${city}
-
-    # ${stateAbbr}    Get Value    ${cust_txt_stateAbbr}
-    # Should Be Equal As Strings    ${user['address']['stateAbbr']}   ${stateAbbr}
-
-    # ${zipcode}    Get Value    ${cust_txt_zipcode}
-    # Should Be Equal As Strings    ${user['address']['zipcode']}   ${zipcode}
-
-    # ${password}    Get Value    ${cust_txt_confirm_password}
-    # Should Be Equal As Strings    ${user['password']}  ${password}
-
-    # ${confirm_password}    Get Value    ${cust_txt_confirm_password}
-    # Should Be Equal As Strings    ${user['password']}   ${confirm_password}
-
 Get Customer Row
     [Arguments]    ${user}
     Navigate    Customers
@@ -112,31 +86,21 @@ Get Customer Row
         ${name}    Get Text    ((//tbody//tr)[${i+1}]//td)[2]
         ${name}    Clean Text    ${name}
         Return From Keyword If    "${user["first_name"]} ${user["last_name"]}"=="${name}"    ${i+1}
-        # Log To Console    ${name}
-        # Log    ${name}
     END
 
 Get Customer Details
     Navigate    Customers
     # ${table_headers}    Create List    Name    Last Seen    Orders    Total spent    Latest purchase    News    Segments
-    ${web_elems}    Get WebElements    //tbody//tr    # Get WebElements == pag pinasahan xpath, kukunin nya lahat ng rows as list
+    ${web_elems}    Get WebElements    //tbody//tr    
     FOR    ${i}    ${elem}    IN ENUMERATE   @{web_elems}
-
         ${name}    Get Text    ((//tbody//tr)[${i+1}]//td)[2]
         ${name}    Clean Text    ${name}
-
         ${last_seen}    Get Text    ((//tbody//tr)[${i+1}]//td)[3]
-
         ${orders}    Get Text    ((//tbody//tr)[${i+1}]//td)[4]
-
         ${total_spent}    Get Text    ((//tbody//tr)[${i+1}]//td)[5]
-
         ${latest_purchase}    Get Text    ((//tbody//tr)[${i+1}]//td)[6]
-
         ${news}    Get Element Attribute    ((//tbody//tr)[${i+1}]//td)[7]//*[name()="svg"]    aria-label        
-
         ${segments}    Get WebElements    ((//tbody//tr)[${i+1}]//td)[8]//span
-
 
         Log To Console    \n====== USER ${i+1} ======
         Log to Console    Name: ${name}
@@ -157,15 +121,6 @@ Get Customer Details
             Log to Console    Segments: ${comma_segment_list}
             Log To Console    \n
         END
-
-        # Log To Console    \n====== User ${i+1} ======
-        # FOR    ${header}    IN    @{table_headers}
-        # FOR    ${j}    IN RANGE    2    9
-        #     ${name}    Get Text    ((//tbody//tr)[${i+1}]//td)[${j}]
-        #     # ${name}    Clean Text    ${name}
-        #     Log To Console    ${table_headers[${j-2}]}: ${name} 
-        # END
-        # END
     END
 
     RETURN    None
@@ -191,7 +146,7 @@ Analyze User Spending
         END
         
     END
-    # ${final_total}    Evaluate    "${final_total}:,"
+
     ${formatted_total}    Evaluate    f"{${final_total}:,.2f}"
     Log To Console    \n==========================================
     Log To Console    Total Customer Spending: $${formatted_total}
@@ -203,40 +158,45 @@ Analyze User Spending
         Pass Execution    PASS: Total spending ($${formatted_total}) meets minimum threshold ($3,500)
     END
     
-
-
 Update A Customer
-    [Arguments]    ${user}
-    Navigate    Customers
-    Wait Until Element Is Visible    ((//tbody//tr)[${user["id"]}]//td)[2]        #(//tbody//tr)[1]//td[contains(@class,"column-last_name")]
-    Click Element    ((//tbody//tr)[${user["id"]}]//td)[2]
-    Wait Until Element Is Visible    ${cust_txt_first_name}
+    [Arguments]    ${users}
+    ${customer_count}    Get Length    ${users}
+    FOR    ${i}    IN RANGE    ${customer_count}-${5}    ${customer_count}
+        ${user}    Set Variable    ${users}[${i}]
+        
+        Navigate    Customers
+        Wait Until Element Is Visible    ((//tbody//tr)[${user["id"]}]//td)[2]        #(//tbody//tr)[1]//td[contains(@class,"column-last_name")]
+        Click Element    ((//tbody//tr)[${user["id"]}]//td)[2]
+        Wait Until Element Is Visible    ${cust_txt_first_name}
 
-    ### TO SHORTEN
-    ${locators}    Create List    
-    ...    ${cust_txt_first_name}    ${cust_txt_last_name}    ${cust_txt_email}    
-    ...    ${cust_txt_birthday}    ${cust_txt_address}    ${cust_txt_city}    
-    ...    ${cust_txt_stateAbbr}    ${cust_txt_zipcode}    ${cust_txt_password}    
-    ...    ${cust_txt_confirm_password}
+        ### TO SHORTEN
+        ${locators}    Create List    
+        ...    ${cust_txt_first_name}    ${cust_txt_last_name}    ${cust_txt_email}    
+        ...    ${cust_txt_birthday}    ${cust_txt_address}    ${cust_txt_city}    
+        ...    ${cust_txt_stateAbbr}    ${cust_txt_zipcode}    ${cust_txt_password}    
+        ...    ${cust_txt_confirm_password}
 
-    ${expected_values}     Create List    
-    ...    ${user['first_name']}    ${user['last_name']}    ${user['email']}    
-    ...    ${user['birthday']}    ${user['address']['street']} ${user["address"]['suite']}    
-    ...    ${user['address']['city']}    ${user['address']['stateAbbr']}    
-    ...    ${user['address']['zipcode']}    ${user['password']}    ${user['password']}
+        ${expected_values}     Create List    
+        ...    ${user['first_name']}    ${user['last_name']}    ${user['email']}    
+        ...    ${user['birthday']}    ${user['address']['street']} ${user["address"]['suite']}    
+        ...    ${user['address']['city']}    ${user['address']['stateAbbr']}    
+        ...    ${user['address']['zipcode']}    ${user['password']}    ${user['password']}
 
-    FOR    ${i}    ${locator}    IN ENUMERATE    @{locators}
-        Mouse Over    ${locator}    # para kita ano ung cinocompare
-        IF    '${locator}'=='${cust_txt_birthday}'
-            Input Text    ${locator}    ${expected_values[${i}]}
-        ELSE
-            Clear Then Input Text    ${locator}    ${expected_values[${i}]}
+        FOR    ${i}    ${locator}    IN ENUMERATE    @{locators}
+            Mouse Over    ${locator}   
+            IF    '${locator}'=='${cust_txt_birthday}'
+                Set React Date Input    ${locator}    ${expected_values[${i}]}
+            ELSE
+                Clear Then Input Text    ${locator}    ${expected_values[${i}]}
+            END
         END
-    END
 
-    Click Element   ${customers_btn_save}
-    # setTimeout(() => { debugger; }, 1);
-    Wait Until Element Is Visible    //div[text()="Customer updated"]
+        Click Element   ${customers_btn_save}
+        # setTimeout(() => { debugger; }, 1);
+        Wait Until Element Is Visible    //div[text()="Customer updated"]
+        Verify If Customer Is Added In The Table    ${user}
+        Verify Customer Identity Details   ${user}
+    END
 
 
     
